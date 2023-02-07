@@ -26,8 +26,8 @@ class SocketController extends Controller implements MessageComponentInterface
         parse_str($queryString, $queryarray);
 
         if (isset($queryarray['token'])) {
-            User::where('token', $queryarray['token'])->update(['connection_id' => $conn->resourceId, 'user_status' => 'online']);
-            $user_id = User::select('id')->where('token', $queryarray['token'])->get();
+            User::query()->where('token', $queryarray['token'])->update(['connection_id' => $conn->resourceId, 'user_status' => 'online']);
+            $user_id = User::query()->select('id')->where('token', $queryarray['token'])->get();
             $data['id'] = $user_id[0]->id;
 
             $data['status'] = 'online';
@@ -56,7 +56,7 @@ class SocketController extends Controller implements MessageComponentInterface
         $data = json_decode($msg);
         if (isset($data->type)) {
             if ($data->type == 'request_load_unconnected_user') {
-                $user_data = User::select('id', 'name', 'user_status', 'user_image')
+                $user_data = User::query()->select('id', 'name', 'user_status', 'user_image')
                     ->where('id', '!=', $data->from_user_id)
                     ->orderBy('name', 'ASC')
                     ->get();
@@ -70,7 +70,7 @@ class SocketController extends Controller implements MessageComponentInterface
                         'user_image' => $row['user_image']
                     );
                 }
-                $sender_connection_id = User::select('connection_id')->where('id', $data->from_user_id)->get();
+                $sender_connection_id = User::query()->select('connection_id')->where('id', $data->from_user_id)->get();
                 $send_data['data'] = $sub_data;
                 $send_data['response_load_unconnected_user'] = true;
                 foreach ($this->clients as $client) {
@@ -82,7 +82,7 @@ class SocketController extends Controller implements MessageComponentInterface
         }
 
         if ($data->type == 'request_search_user') {
-            $user_data = User::select('id', 'name', 'user_status', 'user_image')
+            $user_data = User::query()->select('id', 'name', 'user_status', 'user_image')
                 ->where('id', '!=', $data->from_user_id)
                 ->where('name', 'like', '%' . $data->search_query . '%')
                 ->orderBy('name', 'ASC')
@@ -91,7 +91,7 @@ class SocketController extends Controller implements MessageComponentInterface
             $sub_data = array();
 
             foreach ($user_data as $row) {
-                $chat_request = ChatRequest::select('id')
+                $chat_request = ChatRequest::query()->select('id')
                     ->where(function ($query) use ($data, $row) {
                         $query->where('from_user_id', $data->from_user_id)->where('to_user_id', $row->id);
                     })
@@ -115,7 +115,7 @@ class SocketController extends Controller implements MessageComponentInterface
                 }
             }
 
-            $sender_connection_id = User::select('connection_id')->where('id', $data->from_user_id)->get();
+            $sender_connection_id = User::query()->select('connection_id')->where('id', $data->from_user_id)->get();
             $send_data['data'] = $sub_data;
             $send_data['response_search_user'] = true;
             foreach ($this->clients as $client) {
@@ -148,7 +148,7 @@ class SocketController extends Controller implements MessageComponentInterface
         }
 
         if ($data->type == 'request_load_unread_notification') {
-            $notification_data = ChatRequest::select('id', 'from_user_id', 'to_user_id', 'status')
+            $notification_data = ChatRequest::query()->select('id', 'from_user_id', 'to_user_id', 'status')
                 ->where('status', '!=', 'approve')
                 ->where(function ($query) use ($data) {
                     $query->where('from_user_id', $data->user_id)->orWhere('to_user_id', $data->user_id);
@@ -172,7 +172,7 @@ class SocketController extends Controller implements MessageComponentInterface
                     $user_id = $row->from_user_id;
                     $notification_type = 'Receive Request';
                 }
-                $user_data = User::select('name', 'user_image')->where('id', $user_id)->first();
+                $user_data = User::query()->select('name', 'user_image')->where('id', '=', $user_id)->first();
 
                 $sub_data[] = array(
                     'id' => $row->id,
@@ -184,7 +184,7 @@ class SocketController extends Controller implements MessageComponentInterface
                     'user_image' => $user_data->user_image
                 );
             }
-            $sender_connection_id = User::select('connection_id')->where('id', $data->user_id)->get();
+            $sender_connection_id = User::query()->select('connection_id')->where('id', '=', $data->user_id)->get();
             foreach ($this->clients as $client) {
                 if ($client->resourceId == $sender_connection_id[0]->connection_id) {
                     $send_data['response_load_notification'] = true;
@@ -195,9 +195,9 @@ class SocketController extends Controller implements MessageComponentInterface
         }
 
         if ($data->type == 'request_process_chat_request') {
-            ChatRequest::where('id', $data->chat_request_id)->update(['status' => $data->action]);
-            $sender_connection_id = User::select('connection_id')->where('id', $data->from_user_id)->get();
-            $receiver_connection_id = User::select('connection_id')->where('id', $data->to_user_id)->get();
+            ChatRequest::query()->where('id', $data->chat_request_id)->update(['status' => $data->action]);
+            $sender_connection_id = User::query()->select('connection_id')->where('id', $data->from_user_id)->get();
+            $receiver_connection_id = User::query()->select('connection_id')->where('id', $data->to_user_id)->get();
             foreach ($this->clients as $client) {
                 $send_data['response_process_chat_request'] = true;
                 if ($client->resourceId == $sender_connection_id[0]->connection_id) {
@@ -212,7 +212,7 @@ class SocketController extends Controller implements MessageComponentInterface
 
         if ($data->type == 'request_connected_chat_user') {
             $condition_1 = ['from_user_id' => $data->from_user_id, 'to_user_id' => $data->from_user_id];
-            $user_id_data = ChatRequest::select('from_user_id', 'to_user_id')
+            $user_id_data = ChatRequest::query()->select('from_user_id', 'to_user_id')
                 ->orWhere($condition_1)
                 ->where('status', 'Approve')
                 ->get();
@@ -232,7 +232,7 @@ class SocketController extends Controller implements MessageComponentInterface
                     $user_id = $user_id_row->to_user_id;
                 }
 
-                $user_data = User::select('id', 'name', 'user_image', 'user_status', 'updated_at')->where('id', $user_id)->first();
+                $user_data = User::query()->select('id', 'name', 'user_image', 'user_status', 'updated_at')->where('id', $user_id)->first();
 
                 if (date('Y-m-d') == date('Y-m-d', strtotime($user_data->updated_at))) {
                     $last_seen = 'Last Seen At ' . date('H:i', strtotime($user_data->updated_at));
@@ -249,7 +249,7 @@ class SocketController extends Controller implements MessageComponentInterface
                 );
             }
 
-            $sender_connection_id = User::select('connection_id')->where('id', $data->from_user_id)->get();
+            $sender_connection_id = User::query()->select('connection_id')->where('id', $data->from_user_id)->get();
             foreach ($this->clients as $client) {
                 if ($client->resourceId == $sender_connection_id[0]->connection_id) {
                     $send_data['response_connected_chat_user'] = true;
@@ -268,8 +268,8 @@ class SocketController extends Controller implements MessageComponentInterface
             $chat->message_status = 'Not Send';
             $chat->save();
             $chat_message_id = $chat->id;
-            $receiver_connection_id = User::select('connection_id')->where('id', $data->to_user_id)->get();
-            $sender_connection_id = User::select('connection_id')->where('id', $data->from_user_id)->get();
+            $receiver_connection_id = User::query()->select('connection_id')->where('id', $data->to_user_id)->get();
+            $sender_connection_id = User::query()->select('connection_id')->where('id', $data->from_user_id)->get();
 
             foreach ($this->clients as $client) {
                 if ($client->resourceId == $receiver_connection_id[0]->connection_id || $client->resourceId == $sender_connection_id[0]->connection_id) {
@@ -278,7 +278,7 @@ class SocketController extends Controller implements MessageComponentInterface
                     $send_data['from_user_id'] = $data->from_user_id;
                     $send_data['to_user_id'] = $data->to_user_id;
                     if ($client->resourceId == $receiver_connection_id[0]->connection_id) {
-                        Chat::where('id', $chat_message_id)->update(['message_status' => 'Send']);
+                        Chat::query()->where('id', $chat_message_id)->update(['message_status' => 'Send']);
                         $send_data['message_status'] = 'Send';
                     } else {
                         $send_data['message_status'] = 'Not Send';
@@ -289,7 +289,7 @@ class SocketController extends Controller implements MessageComponentInterface
         }
 
         if ($data->type == 'request_chat_history') {
-            $chat_data = Chat::select('id', 'from_user_id', 'to_user_id', 'chat_message', 'message_status')
+            $chat_data = Chat::query()->select('id', 'from_user_id', 'to_user_id', 'chat_message', 'message_status')
                 ->where(function ($query) use ($data) {
                     $query->where('from_user_id', $data->from_user_id)->where('to_user_id', $data->to_user_id);
                 })
@@ -306,7 +306,7 @@ class SocketController extends Controller implements MessageComponentInterface
 
             $send_data['chat_history'] = $chat_data;
 
-            $receiver_connection_id = User::select('connection_id')->where('id', $data->from_user_id)->get();
+            $receiver_connection_id = User::query()->select('connection_id')->where('id', $data->from_user_id)->get();
 
             foreach ($this->clients as $client) {
                 if ($client->resourceId == $receiver_connection_id[0]->connection_id) {
@@ -317,9 +317,9 @@ class SocketController extends Controller implements MessageComponentInterface
 
         if ($data->type == 'update_chat_status') {
             //update chat status
-            Chat::where('id', $data->chat_message_id)->update(['message_status' => $data->chat_message_status]);
+            Chat::query()->where('id', '=', $data->chat_message_id)->update(['message_status' => $data->chat_message_status]);
 
-            $sender_connection_id = User::select('connection_id')->where('id', $data->from_user_id)->get();
+            $sender_connection_id = User::query()->select('connection_id')->where('id', '=', $data->from_user_id)->get();
             foreach ($this->clients as $client) {
                 if ($client->resourceId == $sender_connection_id[0]->connection_id) {
                     $send_data['update_message_status'] = $data->chat_message_status;
@@ -332,7 +332,7 @@ class SocketController extends Controller implements MessageComponentInterface
         }
 
         if ($data->type == 'check_unread_message') {
-            $chat_data = Chat::select('id', 'from_user_id', 'to_user_id')->where('message_status', '!=', 'Read')->where('from_user_id', $data->to_user_id)->get();
+            $chat_data = Chat::query()->select('id', 'from_user_id', 'to_user_id')->where('message_status', '!=', 'Read')->where('from_user_id', $data->to_user_id)->get();
 
             /*
             SELECT id, from_user_id, to_user_id FROM chats
@@ -340,10 +340,10 @@ class SocketController extends Controller implements MessageComponentInterface
             AND from_user_id = $data->to_user_id
             */
 
-            $sender_connection_id = User::select('connection_id')->where('id', $data->from_user_id)->get(); //send number of unread message
-            $receiver_connection_id = User::select('connection_id')->where('id', $data->to_user_id)->get(); //send message read status
+            $sender_connection_id = User::query()->select('connection_id')->where('id', $data->from_user_id)->get(); //send number of unread message
+            $receiver_connection_id = User::query()->select('connection_id')->where('id', $data->to_user_id)->get(); //send message read status
             foreach ($chat_data as $row) {
-                Chat::where('id', $row->id)->update(['message_status' => 'Send']);
+                Chat::query()->where('id', $row->id)->update(['message_status' => 'Send']);
                 foreach ($this->clients as $client) {
                     if ($client->resourceId == $sender_connection_id[0]->connection_id) {
                         $send_data['count_unread_message'] = 1;
@@ -378,9 +378,9 @@ class SocketController extends Controller implements MessageComponentInterface
         parse_str($querystring, $queryarray);
 
         if (isset($queryarray['token'])) {
-            User::where('token', $queryarray['token'])->update(['connection_id' => 0, 'user_status' => 'offline']);
+            User::query()->where('token', $queryarray['token'])->update(['connection_id' => 0, 'user_status' => 'offline']);
 
-            $user_id = User::select('id', 'updated_at')->where('token', $queryarray['token'])->get();
+            $user_id = User::query()->select('id', 'updated_at')->where('token', $queryarray['token'])->get();
 
             $data['id'] = $user_id[0]->id;
 

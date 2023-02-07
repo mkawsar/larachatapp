@@ -88,10 +88,9 @@
 
             if (data.status) {
                 var online_status_icon = document.getElementsByClassName('online_status_icon');
-
-                for (var count = 0; count < online_status_icon.length; count++) {
-                    if (online_status_icon[count].id == 'status_' + data.id) {
-                        if (data.status == 'online') {
+                for (let count = 0; count < online_status_icon.length; count++) {
+                    if (online_status_icon[count].id === 'status_' + data.id) {
+                        if (data.status === 'online') {
                             online_status_icon[count].classList.add('text-success');
                             online_status_icon[count].classList.remove('text-danger');
                             document.getElementById('last_seen_' + data.id + '').innerHTML = 'online';
@@ -105,16 +104,12 @@
             }
 
             if (data.response_load_unconnected_user || data.response_search_user) {
-                var html = '';
+                let html = '';
                 if (data.data.length > 0) {
                     html += '<ul class="list-group">';
-                    for (var count = 0; count < data.data.length; count++) {
-                        var user_image = '';
-                        if (data.data[count].user_image != '') {
-                            user_image = `<img src="{{ asset('images/') }}/` + data.data[count].user_image + `" width="40" class="rounded-circle" />`;
-                        } else {
-                            user_image = `<img src="{{ asset('images/no-image.jpg') }}" width="40" class="rounded-circle" />`
-                        }
+                    for (let count = 0; count < data.data.length; count++) {
+                        console.log(data.data[count])
+                        let user_image = `<img src="` + data.data[count].user_image + `" width="40" class="rounded-circle" />`;;
 
                         html += `
                                     <li class="list-group-item">
@@ -145,14 +140,9 @@
             }
 
             if (data.response_load_notification) {
-                var html = '';
-                for (var count = 0; count < data.data.length; count++) {
-                    var user_image = '';
-                    if (data.data[count].user_image != '') {
-                        user_image = `<img src="{{ asset('images/') }}/` + data.data[count].user_image + `" width="40" class="rounded-circle" />`;
-                    } else {
-                        user_image = `<img src="{{ asset('images/no-image.jpg') }}" width="40" class="rounded-circle" />`;
-                    }
+                let html = '';
+                for (let count = 0; count < data.data.length; count++) {
+                    let user_image = `<img src="` + data.data[count].user_image + `" width="40" class="rounded-circle" />`;
 
                     html += `
                             <li class="list-group-item">
@@ -160,14 +150,14 @@
                                     <div class="col col-8">` + user_image + `&nbsp;` + data.data[count].name + `</div>
                                     <div class="col col-4">
                             `;
-                    if (data.data[count].notification_type == 'Send Request') {
-                        if (data.data[count].status == 'pending') {
+                    if (data.data[count].notification_type === 'Send Request') {
+                        if (data.data[count].status === 'pending') {
                             html += '<button type="button" name="send_request" class="btn btn-warning btn-sm float-end">Request Send</button>';
                         } else {
                             html += '<button type="button" name="send_request" class="btn btn-danger btn-sm float-end">Request Rejected</button>';
                         }
                     } else {
-                        if (data.data[count].status == 'pending') {
+                        if (data.data[count].status === 'pending') {
                             html += '<button type="button" class="btn btn-danger btn-sm float-end" onclick="process_chat_request(' + data.data[count].id + ', ' + data.data[count].from_user_id + ', ' + data.data[count].to_user_id + ', `reject`)"><i class="fas fa-times"></i></button>&nbsp;';
                             html += '<button type="button" class="btn btn-success btn-sm float-end" onclick="process_chat_request(' + data.data[count].id + ', ' + data.data[count].from_user_id + ', ' + data.data[count].to_user_id + ', `approve`)"><i class="fas fa-check"></i></button>';
                         } else {
@@ -190,9 +180,9 @@
             }
 
             if (data.response_connected_chat_user) {
-                var html = '<div class="list-group">';
+                let html = '<div class="list-group">';
                 if (data.data.length > 0) {
-                    for (var count = 0; count < data.data.length; count++) {
+                    for (let count = 0; count < data.data.length; count++) {
                         html += `
 				<a href="#" class="list-group-item d-flex justify-content-between align-items-start" onclick="make_chat_area(` + data.data[count].id + `, '` + data.data[count].name + `'); load_chat_data(` + from_user_id + `, ` + data.data[count].id + `); ">
 					<div class="ms-2 me-auto">
@@ -200,7 +190,7 @@
 
                         var last_seen = '';
 
-                        if (data.data[count].user_status == 'online') {
+                        if (data.data[count].user_status === 'online') {
                             html += '<span class="text-success online_status_icon" id="status_' + data.data[count].id + '"><i class="fas fa-circle"></i></span>';
 
                             last_seen = 'online';
@@ -210,14 +200,7 @@
                             last_seen = data.data[count].last_seen;
                         }
 
-                        var user_image = '';
-
-                        if (data.data[count].user_image != '') {
-                            user_image = `<img src="{{ asset('images/') }}/` + data.data[count].user_image + `" width="35" class="rounded-circle" />`;
-                        } else {
-                            user_image = `<img src="{{ asset('images/no-image.jpg') }}" width="35" class="rounded-circle" />`;
-                        }
-
+                        var user_image = `<img src="` + data.data[count].user_image + `" width="40" class="rounded-circle" />`;
 
                         html += `
 						&nbsp; ` + user_image + `&nbsp;<b>` + data.data[count].name + `</b>
@@ -239,20 +222,20 @@
             }
 
             if (data.message) {
-                var html = '';
+                let html = '';
 
-                if (data.from_user_id == from_user_id) {
+                if (data.from_user_id === from_user_id) {
 
-                    var icon_style = '';
+                    let icon_style = '';
 
-                    if (data.message_status == 'Not Send') {
+                    if (data.message_status === 'Not Send') {
                         icon_style = '<span id="chat_status_' + data.chat_message_id + '" class="float-end"><i class="fas fa-check text-muted"></i></span>';
                     }
-                    if (data.message_status == 'Send') {
+                    if (data.message_status === 'Send') {
                         icon_style = '<span id="chat_status_' + data.chat_message_id + '" class="float-end"><i class="fas fa-check-double text-muted"></i></span>';
                     }
 
-                    if (data.message_status == 'Read') {
+                    if (data.message_status === 'Read') {
                         icon_style = '<span class="text-primary float-end" id="chat_status_' + data.chat_message_id + '"><i class="fas fa-check-double"></i></span>';
                     }
 
@@ -265,7 +248,7 @@
 			</div>
 			`;
                 } else {
-                    if (to_user_id != '') {
+                    if (to_user_id !== '') {
                         html += `
 				<div class="row">
 					<div class="col col-9 alert alert-light text-dark shadow-sm">
@@ -276,10 +259,10 @@
 
                         update_message_status(data.chat_message_id, from_user_id, to_user_id, 'Read');
                     } else {
-                        var count_unread_message_element = document.getElementById('user_unread_message_' + data.from_user_id + '');
+                        let count_unread_message_element = document.getElementById('user_unread_message_' + data.from_user_id + '');
                         if (count_unread_message_element) {
-                            var count_unread_message = count_unread_message_element.textContent;
-                            if (count_unread_message == '') {
+                            let count_unread_message = count_unread_message_element.textContent;
+                            if (count_unread_message === '') {
                                 count_unread_message = parseInt(0) + 1;
                             } else {
                                 count_unread_message = parseInt(count_unread_message) + 1;
@@ -292,7 +275,7 @@
 
                 }
 
-                if (html != '') {
+                if (html !== '') {
                     var previous_chat_element = document.querySelector('#chat_history');
 
                     var chat_history_element = document.querySelector('#chat_history');
@@ -307,18 +290,18 @@
                 var html = '';
 
                 for (var count = 0; count < data.chat_history.length; count++) {
-                    if (data.chat_history[count].from_user_id == from_user_id) {
+                    if (data.chat_history[count].from_user_id === from_user_id) {
                         var icon_style = '';
 
-                        if (data.chat_history[count].message_status == 'Not Send') {
+                        if (data.chat_history[count].message_status === 'Not Send') {
                             icon_style = '<span id="chat_status_' + data.chat_history[count].id + '" class="float-end"><i class="fas fa-check text-muted"></i></span>';
                         }
 
-                        if (data.chat_history[count].message_status == 'Send') {
+                        if (data.chat_history[count].message_status === 'Send') {
                             icon_style = '<span id="chat_status_' + data.chat_history[count].id + '" class="float-end"><i class="fas fa-check-double text-muted"></i></span>';
                         }
 
-                        if (data.chat_history[count].message_status == 'Read') {
+                        if (data.chat_history[count].message_status === 'Read') {
                             icon_style = '<span class="text-primary float-end" id="chat_status_' + data.chat_history[count].id + '"><i class="fas fa-check-double"></i></span>';
                         }
 
@@ -333,7 +316,7 @@
 
 
                     } else {
-                        if (data.chat_history[count].message_status != 'Read') {
+                        if (data.chat_history[count].message_status !== 'Read') {
                             update_message_status(data.chat_history[count].id, data.chat_history[count].from_user_id, data.chat_history[count].to_user_id, 'Read');
                         }
 
@@ -345,7 +328,7 @@
 				</div>
 				`;
 
-                        var count_unread_message_element = document.getElementById('user_unread_message_' + data.chat_history[count].from_user_id + '');
+                        let count_unread_message_element = document.getElementById('user_unread_message_' + data.chat_history[count].from_user_id + '');
 
                         if (count_unread_message_element) {
                             count_unread_message_element.innerHTML = '';
@@ -362,10 +345,10 @@
                 var chat_status_element = document.querySelector('#chat_status_' + data.chat_message_id + '');
 
                 if (chat_status_element) {
-                    if (data.update_message_status == 'Read') {
+                    if (data.update_message_status === 'Read') {
                         chat_status_element.innerHTML = '<i class="fas fa-check-double text-primary"></i>';
                     }
-                    if (data.update_message_status == 'Send') {
+                    if (data.update_message_status === 'Send') {
                         chat_status_element.innerHTML = '<i class="fas fa-check-double text-muted"></i>';
                     }
                 }
@@ -376,7 +359,7 @@
                     if (count_unread_message_element) {
                         var count_unread_message = count_unread_message_element.textContent;
 
-                        if (count_unread_message == '') {
+                        if (count_unread_message === '') {
                             count_unread_message = parseInt(0) + 1;
                         } else {
                             count_unread_message = parseInt(count_unread_message) + 1;
@@ -555,7 +538,7 @@
 
             var allowed_extension = ['png', 'jpg'];
 
-            if (allowed_extension.indexOf(file_extension) == -1) {
+            if (allowed_extension.indexOf(file_extension) === -1) {
                 alert("Invalid Image File");
 
                 return false;
